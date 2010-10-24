@@ -28,22 +28,22 @@
             {% for key in keys %}
                 {! 
                     var value = v[key]; 
-                    var validators = value[6];
+                    var validators = value['validators'];
                 !}
                 <div class='api_call'>
                     <div class='title'>url: <a href='{{key}}'>{{key}}</a></div>
                     
-                    {% if value[2] %}
+                    {% if value['func_doc'] %}
                         <div class='description'>
-                            {{value[2]}}
+                            {{value['func_doc']}}
                         </div>
                     {% end %}
                     
-                    {% if value[4].keys().length %}
+                    {% if value['required_args'].keys().length %}
                         <div class='requirements'>
                             The following values are required:
                             <ul>
-                            {% for val in value[4] %}
+                            {% for val in value['required_args'] %}
                                 <li>
                                 {{val}}
                                 
@@ -57,14 +57,14 @@
                         </div>
                     {% end %}
 
-                    {% if value[5].keys().length %}
+                    {% if value['optional_args'].keys().length %}
                     <div class='optional'>
                         The following values are optional:
                         <table>
                             <thead><tr><th>Key</th><th>Default</th><th>Validated</th></tr></thead>
                             <tbody>
-                            {% for okey in value[5].keys() %}
-                                <tr><td>{{okey}}</td><td>{{value[5][okey]}}</td><td>
+                            {% for okey in value['optional_args'].keys() %}
+                                <tr><td>{{okey}}</td><td>{{value['optional_args'][okey]}}</td><td>
                                 {% if okey in validators %}
                                     {{validators[okey][0]}}
                                 {% else %}

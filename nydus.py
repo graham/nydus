@@ -41,7 +41,15 @@ def error400(docs=[], missing={}, malformed={}, func_doc=''):
 
 def api(path='/', auth=None, required=[], optional={}, validate={}, version=0):
     def wrapper(wrapped_function):
-        api_calls['%i%s' % (version, path)] = (path, wrapped_function.func_name, wrapped_function.func_doc, wrapped_function, required, optional, validate, version)
+        api_calls['%i%s' % (version, path)] = {
+            'path':path, 
+            'func_name':wrapped_function.func_name, 
+            'func_doc':wrapped_function.func_doc, 
+            'func':wrapped_function, 
+            'required_args':required, 
+            'optional_args':optional, 
+            'validators':validate, 
+            'api_version':version}
         def inner(*args, **kwargs):            
             missing = {}
             malformed = {}
@@ -108,20 +116,35 @@ def error404(error): return 'There is no API call at this URL.'
 
 @route('/_api_list/')
 def nice_api():
-    version = request.GET.get('version', 0)
+    version = request.GET.get('version', None)
+    
     d = {}
     for j in api_calls:
-        path, fname, fdoc, func, req, opt, vali, call_version = api_calls[j]
-        func = func.func_name
         v = {}
-        for i in vali:
-            v[i] = (vali[i].func_name, vali[i].func_doc)
+        for i in api_calls[j]['validators']:
+            v[i] = (api_calls[j]['validators'][i].func_name, api_calls[j]['validators'][i].func_doc)
         
         if version != None:
-            if call_version == int(version):
-                d[j] =  (path, fname, fdoc, func, req, opt, v, call_version)
+            if api_calls[j]['api_version'] == int(version):
+                d[j] =  {
+                    'path':api_calls[j]['path'],
+                    'func_name':api_calls[j]['func_name'],
+                    'func_doc':api_calls[j]['func_doc'],
+                    'required_args':api_calls[j]['required_args'],
+                    'optional_args':api_calls[j]['optional_args'],
+                    'validators':v,
+                    'api_version':api_calls[j]['api_version']
+                }
         else:
-            d[j] =  (path, fname, fdoc, func, req, opt, v, call_version)
+            d[j] =  {
+                'path':api_calls[j]['path'],
+                'func_name':api_calls[j]['func_name'],
+                'func_doc':api_calls[j]['func_doc'],
+                'required_args':api_calls[j]['required_args'],
+                'optional_args':api_calls[j]['optional_args'],
+                'validators':v,
+                'api_version':api_calls[j]['api_version']
+            }
             
     return json.dumps(d)
     

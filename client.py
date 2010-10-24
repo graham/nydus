@@ -9,14 +9,23 @@ import functools
 import types
 
 class NydusClient(object):
-    def __init__(self, server, version='0'):
+    def __init__(self, server, version=0):
         self._host = server
         self._version = version
         self._token = None
         self._server = httplib.HTTP(server)
         self._calls = set()
         self._proxies = set()
+        self._data = ''
         self._reflect()
+    
+    def _help(self, key, version=None):
+        if version == None:
+            version = self._version
+        new_key = '%i/%s' % (version, key.lstrip('/'))
+        print new_key
+        if new_key in self._data:
+            print self._data[new_key]
         
     def __repr__(self):
         return "<NydusClient available_api_calls=%r proxies=%r>" % (list(self._calls), list(self._proxies))
@@ -56,19 +65,28 @@ class NydusClient(object):
             raise Exception( str(result) )
     
     def _reflect(self):
+        for i in self._calls:
+            delattr(self, i)
+        for i in self._proxies:
+            delattr(self, i)
+        
         code, data = self._get('/_api_list/', {'version':self._version})
+        
         if code == 200:
-            keys = data.keys()
+            self._data = data
+            keys = self._data.keys()
             keys.sort()
             for key in keys:
-                value = data[key]
+                value = self._data[key]
                 p = key.split('/', 1)[1].strip('/')
                 if not p:
                     p = '_'
 
-                url = '/%s/%s' % (self._version, value[0].lstrip('/'))
+                print p
+                
+                url = '/%s/%s' % (self._version, value['path'].lstrip('/'))
                 c = lambda url=url, **kwargs: self._handle(self._get(url, kwargs))
-                c.func_doc = str(data[key][2]) + "\nRequired Args: " + str(data[key][4]) + "\nOptional Args:" + str(data[key][5])
+                c.func_doc = str(value['func_doc']) + "\nRequired Args: " + str(value['required_args']) + "\nOptional Args:" + str(value['optional_args'])
 
                 l = p.split('/')
                 c.func_name = str(l[-1])
