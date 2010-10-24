@@ -1,0 +1,105 @@
+<html>
+    <head>
+        <meta http-equiv="Content-type" content="text/html; charset=utf-8">
+        <title>testing</title>
+        
+        <script type="text/javascript" charset="utf-8" src='/_data/mootools'> </script>
+        <script type="text/javascript" charset="utf-8" src='/_data/jsninja'> </script>
+        
+        <script type="text/javascript" charset="utf-8">        
+            window.addEvent('domready', function() {
+                var env = jsninja.env;
+                env.run();
+                
+                var div = $('render_target');
+                new Request.JSON({url: '/_api_list/', onSuccess: function(data) {
+                    env.render('api_list', div, data);
+                }}).get();
+                
+            });
+        </script>
+        
+        <script type="text/plain" charset="utf-8" class='jst-template' id='api_list'>
+            {! 
+                var keys = v.keys();
+                keys.sort()
+            !}
+            
+            {% for key in keys %}
+                {! 
+                    var value = v[key]; 
+                    var validators = value[6];
+                !}
+                <div class='api_call'>
+                    <div class='title'>url: <a href='{{key}}'>{{key}}</a></div>
+                    
+                    {% if value[2] %}
+                        <div class='description'>
+                            {{value[2]}}
+                        </div>
+                    {% end %}
+                    
+                    {% if value[4].keys().length %}
+                        <div class='requirements'>
+                            The following values are required:
+                            <ul>
+                            {% for val in value[4] %}
+                                <li>
+                                {{val}}
+                                
+                                {% if val in validators %}
+                                    ({{validators[val][0]}})
+                                {% end %}
+                                
+                                </li>
+                            {% end %}
+                            </ul>
+                        </div>
+                    {% end %}
+
+                    {% if value[5].keys().length %}
+                    <div class='optional'>
+                        The following values are optional:
+                        <table>
+                            <thead><tr><th>Key</th><th>Default</th><th>Validated</th></tr></thead>
+                            <tbody>
+                            {% for okey in value[5].keys() %}
+                                <tr><td>{{okey}}</td><td>{{value[5][okey]}}</td><td>
+                                {% if okey in validators %}
+                                    {{validators[okey][0]}}
+                                {% else %}
+                                    No
+                                {% end %}
+                                </td></tr>
+                            {% end %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% end %}
+                </div>
+            {% end %}
+        </script>
+        
+        <style type="text/css" media="screen">
+            .api_call {
+                margin-left: 20px;
+                margin-right: 20px;
+                padding: 10px;
+            }
+            .api_call:hover {
+                background-color: #EFE;
+            }
+            
+            ul { margin:0px;}
+            
+            .api_call > .description {
+            }
+        </style>
+        
+    </head>
+    
+    
+    <body>
+        <div id='render_target'>Waiting...</div>
+    </body>
+</html>
