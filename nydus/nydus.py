@@ -176,7 +176,7 @@ def route_to_app(p):
     def server_static(path):
         return static_file(path, root=p)
 
-def nydus_run(config_d):
+def nydus_run(config_d={}):
     import bottle
     bottle.debug(True)
     config.update(config_d)

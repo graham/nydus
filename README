@@ -1,0 +1,45 @@
+Nydus: Writing APIs with Python (made easier)
+
+Nydus isn't a new idea, in fact, it's been written a ton of times over. With CORBA (ew) Soap, and WSDL there really isn't any need for a new way to manage APIs right?
+
+http://en.wikipedia.org/wiki/Common_Object_Request_Broker_Architecture
+http://en.wikipedia.org/wiki/SOAP
+http://www.w3.org/TR/wsdl
+
+I guess I disagree, while these technologies are great, they make consumption eays, but they don't really make the creation and management of the API itself very easy.
+
+Nydus attempts to make creating the API itself easy, and in the future will provide a SOAP interface. Nydus attempts to resolve the following issues that you come across while writing an API.
+
+  1. Dealing with documentation, because developers are horrible at this.
+  2. Giving decent error messages, most API tools are horrible at this.
+  3. Making handling multiple versions of an API easy.
+  4. Allowing clients to know what api calls are available.
+
+Creating an API is simple, first import the nydus module and the api decorator.
+
+---------- main.py ------
+from nydus import api, nydus_run
+
+@api(path='/test/')
+def test():
+    return "hello world"
+
+nydus_run()
+
+------ end main.py ------
+
+You can now visit: http://localhost:8080/test/
+
+You will receive a JSON encoded string "hello world".
+
+No big deal right? Well, sorta. Now visit http://localhost:8080/_api
+
+You should receive a nice little list of available API calls. Again, no big deal. So lets do some nice things.
+
+@api(path='/test/', required=['id'])
+def test(id):
+    return ['done', id]
+
+Now try querying http://localhost:8080/test/
+
+You are presented with a nice clean error message, telling you that you'll need to pass id in to this api call.
