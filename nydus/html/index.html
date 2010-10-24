@@ -20,18 +20,15 @@
         </script>
         
         <script type="text/plain" charset="utf-8" class='jst-template' id='api_list'>
-            {! 
-                var keys = v.keys();
-                keys.sort()
-            !}
-            
-            {% for key in keys %}
+            {% for jjj in v %}
                 {! 
-                    var value = v[key]; 
+                    var method = jjj[0];
+                    var path = jjj[1];
+                    var value = jjj[2];
                     var validators = value['validators'];
                 !}
                 <div class='api_call'>
-                    <div class='title'>url: <a href='{{key}}'>{{key}}</a></div>
+                    <div class='title'>url: <a href='{{path}}'>{{path}}</a></div>
                     
                     {% if value['func_doc'] %}
                         <div class='description'>

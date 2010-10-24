@@ -9,7 +9,7 @@ import data
 
 from bottle import request, response, error, run, route, static_file
 
-api_calls = {}
+api_calls = []
 config = {'debug':2}
 
 def error400(docs=[], missing={}, malformed={}, func_doc=''):
@@ -39,17 +39,19 @@ def error400(docs=[], missing={}, malformed={}, func_doc=''):
         d = [json.dumps( {'missing':missing, 'malformed':malformed} )]        
     return '\n'.join(d)
 
-def api(path='/', auth=None, required=[], optional={}, validate={}, version=0):
+def api(path='/', auth=None, required=[], optional={}, validate={}, version=0, method='GET'):
     def wrapper(wrapped_function):
-        api_calls['%i%s' % (version, path)] = {
+        api_calls.append( (method, '%i%s' % (version, path),
+            {
             'path':path, 
-            'func_name':wrapped_function.func_name, 
-            'func_doc':wrapped_function.func_doc, 
-            'func':wrapped_function, 
-            'required_args':required, 
-            'optional_args':optional, 
-            'validators':validate, 
-            'api_version':version}
+            'func_name':wrapped_function.func_name,
+            'func_doc':wrapped_function.func_doc,
+            'func':wrapped_function,
+            'required_args':required,
+            'optional_args':optional,
+            'validators':validate,
+            'api_version':version,
+            }) )
         def inner(*args, **kwargs):            
             missing = {}
             malformed = {}
@@ -105,9 +107,9 @@ def api(path='/', auth=None, required=[], optional={}, validate={}, version=0):
                 d['session'] = None
                 return json.dumps(wrapped_function(**d))
             
-        f = route('/%i/%s' % (version, path.lstrip('/')))(inner)
+        f = route('/%i/%s' % (version, path.lstrip('/')), method=method)(inner)
         if version == 0:
-            route(path)(inner)
+            route(path, method=method)(inner)
         return f
     return wrapper
 
@@ -118,33 +120,37 @@ def error404(error): return 'There is no API call at this URL.'
 def nice_api():
     version = request.GET.get('version', None)
     
-    d = {}
+    d = []
     for j in api_calls:
+        method, path, data = j
+
         v = {}
-        for i in api_calls[j]['validators']:
-            v[i] = (api_calls[j]['validators'][i].func_name, api_calls[j]['validators'][i].func_doc)
+        for i in data['validators']:
+            v[i] = (data['validators'][i].func_name, data['validators'][i].func_doc)
         
         if version != None:
-            if api_calls[j]['api_version'] == int(version):
-                d[j] =  {
-                    'path':api_calls[j]['path'],
-                    'func_name':api_calls[j]['func_name'],
-                    'func_doc':api_calls[j]['func_doc'],
-                    'required_args':api_calls[j]['required_args'],
-                    'optional_args':api_calls[j]['optional_args'],
+            if data['api_version'] == int(version):
+                d.append( (method, path, {
+                    'path':data['path'],
+                    'func_name':data['func_name'],
+                    'func_doc':data['func_doc'],
+                    'required_args':data['required_args'],
+                    'optional_args':data['optional_args'],
                     'validators':v,
-                    'api_version':api_calls[j]['api_version']
-                }
+                    'api_version':data['api_version'],
+                    'method':method
+                }) )
         else:
-            d[j] =  {
-                'path':api_calls[j]['path'],
-                'func_name':api_calls[j]['func_name'],
-                'func_doc':api_calls[j]['func_doc'],
-                'required_args':api_calls[j]['required_args'],
-                'optional_args':api_calls[j]['optional_args'],
+            d.append( (method, path, {
+                'path':data['path'],
+                'func_name':data['func_name'],
+                'func_doc':data['func_doc'],
+                'required_args':data['required_args'],
+                'optional_args':data['optional_args'],
                 'validators':v,
-                'api_version':api_calls[j]['api_version']
-            }
+                'api_version':data['api_version'],
+                'method':method
+            }) )
             
     return json.dumps(d)
     
@@ -163,6 +169,10 @@ else:
     def get_data_page(name):
         return base64.decodestring(getattr(data, name))
 
+@route('/favicon.ico')
+def favicon():
+    return get_data_page('favicon')
+    
 @route('/_api')
 def api_view():
     return get_data_page('index')
