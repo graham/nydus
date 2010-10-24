@@ -23,7 +23,6 @@ class NydusClient(object):
         if version == None:
             version = self._version
         new_key = '%i/%s' % (version, key.lstrip('/'))
-        print new_key
         if new_key in self._data:
             print self._data[new_key]
         
@@ -82,8 +81,6 @@ class NydusClient(object):
                 if not p:
                     p = '_'
 
-                print p
-                
                 url = '/%s/%s' % (self._version, value['path'].lstrip('/'))
                 c = lambda url=url, **kwargs: self._handle(self._get(url, kwargs))
                 c.func_doc = str(value['func_doc']) + "\nRequired Args: " + str(value['required_args']) + "\nOptional Args:" + str(value['optional_args'])
