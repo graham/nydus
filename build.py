@@ -2,8 +2,8 @@ import os
 import base64
 import urllib
 
-urllib.urlretrieve('http://dl.dropbox.com/s/vodhl20wtk05u9q/js/mootools.js', 'html/mootools.js')
-urllib.urlretrieve('http://dl.dropbox.com/s/vodhl20wtk05u9q/jsninja.js', 'html/jsninja.js')
+urllib.urlretrieve('http://dl.dropbox.com/s/rvm1kmkpnqjpx2b/js/mootools.js', 'html/mootools.js')
+urllib.urlretrieve('http://dl.dropbox.com/s/rvm1kmkpnqjpx2b/genie.js', 'html/genie.js')
 
 d = {}
 
