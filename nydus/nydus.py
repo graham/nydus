@@ -39,9 +39,9 @@ def error400(docs=[], missing={}, malformed={}, func_doc=''):
         d = [json.dumps( {'missing':missing, 'malformed':malformed} )]        
     return '\n'.join(d)
 
-def api(path='/', auth=None, required=[], optional={}, validate={}, version=0, method='GET'):
+def api(path='/', auth=None, required=[], optional={}, validate={}, version='0', method='GET'):
     def wrapper(wrapped_function):
-        api_calls.append( (method, '%i%s' % (version, path),
+        api_calls.append( (method, '%s%s' % (version, path),
             {
             'path':path, 
             'func_name':wrapped_function.func_name,
@@ -56,6 +56,7 @@ def api(path='/', auth=None, required=[], optional={}, validate={}, version=0, m
             missing = {}
             malformed = {}
             docs = []
+            session = None
             
             d = {}
             d.update(optional)
@@ -99,16 +100,21 @@ def api(path='/', auth=None, required=[], optional={}, validate={}, version=0, m
 
             if '_auth_token' in d:
                 d.pop('_auth_token')
+                
+            if '__args__' in d:
+                a = d.popitem('__args__')
+            else:
+                a = []
 
             #return wrapped_function(instance, user=None, **d)
             if auth == None:
-                return json.dumps(wrapped_function(**d))
+                return json.dumps(wrapped_function(*a, **d))
             else:
-                d['session'] = None
-                return json.dumps(wrapped_function(**d))
+                d['session'] = session
+                return json.dumps(wrapped_function(*a, **d))
             
-        f = route('/%i/%s' % (version, path.lstrip('/')), method=method)(inner)
-        if version == 0:
+        f = route('/%s/%s' % (version, path.lstrip('/')), method=method)(inner)
+        if version == '0':
             route(path, method=method)(inner)
         return f
     return wrapper
@@ -129,7 +135,7 @@ def nice_api():
             v[i] = (data['validators'][i].func_name, data['validators'][i].func_doc)
         
         if version != None:
-            if data['api_version'] == int(version):
+            if data['api_version'] == version:
                 d.append( (method, path, {
                     'path':data['path'],
                     'func_name':data['func_name'],
@@ -180,14 +186,20 @@ def api_view():
 @route('/_data/:path')
 def server_static_data(path):
     return get_data_page(path)
+    
+def wrap_object(root, obj, methods, **topkwargs):
+    for i in methods:
+        @api(path='%s%s' % (root, i), **topkwargs)
+        def test(__method=i, **kwargs):
+            return getattr(obj, __method)(**kwargs)
 
-def route_to_app(p):
-    @route('/%s/:path#.+#' % p)
+def route_to_app(url, loc):
+    @route('/%s/:path#.+#' % url)
     def server_static(path):
-        return static_file(path, root=p)
+        return static_file(path, root=loc)
 
-def nydus_run(config_d={}):
+def nydus_run(host='127.0.0.1', port=8080, reloader=True, config_d={}):
     import bottle
     bottle.debug(True)
     config.update(config_d)
-    run(host='localhost', port=8080, reloader=True)
+    run(host=host, port=port, reloader=reloader)

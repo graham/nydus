@@ -12,3 +12,4 @@ setup(
         platforms=['any'],
         zip_safe=True,
     )
+

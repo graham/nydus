@@ -73,16 +73,18 @@ class NydusClient(object):
         
         if code == 200:
             self._data = data
-            keys = self._data.keys()
-            keys.sort()
-            for key in keys:
-                value = self._data[key]
+            for method, key, value in data:
                 p = key.split('/', 1)[1].strip('/')
                 if not p:
                     p = '_'
 
                 url = '/%s/%s' % (self._version, value['path'].lstrip('/'))
-                c = lambda url=url, **kwargs: self._handle(self._get(url, kwargs))
+                def w(url2=url):
+                    def inner_call(**kwargs):
+                        return self._handle(self._get(url2, kwargs))
+                    return inner_call
+
+                c = w()
                 c.func_doc = str(value['func_doc']) + "\nRequired Args: " + str(value['required_args']) + "\nOptional Args:" + str(value['optional_args'])
 
                 l = p.split('/')

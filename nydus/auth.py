@@ -22,9 +22,15 @@ def get_session(fss):
     except:
         return None
 
+def fs_session_update(session, d):
+    session.update(d)
+    fs_session_write(session['key'], session)
+    return session
+
 def fs_session_write(key, d={}, path_to_sessions='/tmp/sessions'):
     k = path_to_sessions + '/' + key
     f = open(k, 'w')
+    d.update( {'key':key} )
     f.write( json.dumps(d) )
     return True
 
@@ -33,7 +39,10 @@ def fs_session(key, path_to_sessions='/tmp/sessions'):
     if not os.path.exists(k):
         raise Exception("Authorization Required")
     else:
-        return json.loads( open(k).read() )
+        data = open(k).read().strip()
+        d = json.loads( data )
+        d.update( {'key':key} )
+        return d
         
 def app_engine_session_write(key, d={}):
     pass
@@ -77,12 +86,37 @@ def use_easy_auth(fss=fs_session, fsw=fs_session_write):
         return "hello world."
 
     @api(path='/auth/logout')
-    def logout():
+    def clear():
         """Removes the current _auth_token, returns true if request was previously authorized or false if there was no session."""
         session = get_session(fss)
         response.set_cookie(key='_auth_token', value='deleted', expires=-1, path='/')
+        #clear_session(session)
         if session != None:
             return True
         else:
             return False
     
+    @api(path='/auth/login', required=['username', 'passwd'])
+    def login(username, passwd='foo'):
+        id = str(uuid.uuid4())
+        fsw(id, {'username':username})
+        return id
+        
+    @api(path='/auth/login_cookie', required=['username', 'passwd'])
+    def login_cookie(username, passwd):
+        id = str(uuid.uuid4())
+        fsw(id, {'username':username})
+        response.set_cookie(key='_auth_token', value=id, expires=3600*24, path='/')
+        
+    @api(path='/auth/set', auth=fss)
+    def session_set(session, **kwargs):
+        new_session = fs_session_update(session, kwargs)
+        return new_session
+        
+    @api(path='/auth/get', auth=fss)
+    def session_get(session, key=None):
+        if key:
+            return session[key]
+        else:
+            return session
+            

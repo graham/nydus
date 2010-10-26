@@ -1,0 +1,77 @@
+<html>
+    <head>
+        <meta http-equiv="Content-type" content="text/html; charset=utf-8">
+        <title>testing</title>
+        
+        <script type="text/javascript" charset="utf-8" src='/_data/mootools'> </script>
+        <script type="text/javascript" charset="utf-8" src='/_data/nydus'> </script>
+    </head>
+    
+    
+    <body>
+        <div>
+            <script type="text/javascript" charset="utf-8">
+                var client = build_client('');
+
+                window.addEvent('domready', function() {
+                    $('test').innerHTML = client.count();
+                });
+
+                function incr() {
+                    $('test').innerHTML = client.count_incr();
+                }
+
+                function decr() {
+                    $('test').innerHTML = client.count_decr();
+                }
+            </script>            
+            
+            Current Count:
+            <div id='test'></div>
+        
+            <a href='#' onclick='incr(); return false;'>Increment</a> | 
+            <a href='#' onclick='decr(); return false;'>Decrement</a>
+        </div>
+        <br><br><br>
+        <div>
+            <script type="text/javascript" charset="utf-8">
+
+                window.addEvent('domready', function() {
+
+                });
+
+                function lookup(symbol) {
+                    if (symbol == undefined) {
+                        var symbol = $('symbol_tf').value;
+                    } else {
+                        $('symbol_tf').value = symbol;
+                    }
+                    
+                    var data = client.quote({'symbol':symbol});
+                    $('symbol').innerHTML = data[0].slice(1, -1);
+                    $('symbol_price').innerHTML = data[1];
+                }
+                
+                function lookup_async(symbol) {
+                    if (symbol == undefined) {
+                        var symbol = $('symbol_tf').value;
+                    } else {
+                        $('symbol_tf').value = symbol;
+                    }
+                    $('symbol_tf').value = 'Loading...';
+                    client.quote({'symbol':symbol}, function(data) {
+                        alert(data);
+                    });
+                }
+            </script>
+            
+            <div id='test2'>
+                <input type='textfield' id='symbol_tf'><input type=button onclick='lookup();' value='lookup'>
+                <input type=button onclick='lookup_async();' value='lookup ASYNC'><br><br>
+                Symbol <span id='symbol'></span> - <span id='symbol_price'></span><br>
+                Examples: <a href='#' onclick='lookup("AAPL"); return false;'>AAPL</a>
+                
+                
+            </div>
+    </body>
+</html>
