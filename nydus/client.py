@@ -19,6 +19,9 @@ class NydusClient(object):
         self._data = ''
         self._reflect()
     
+    def _login(self, uid, password):
+        self._token = self.auth.login(uid=uid, password=password)
+    
     def _help(self, key, version=None):
         if version == None:
             version = self._version
@@ -61,7 +64,7 @@ class NydusClient(object):
         if result[0] == 200:
             return result[1]
         else:
-            raise Exception( str(result) )
+            raise Exception( 0, str(result) )
     
     def _reflect(self):
         for i in self._calls:

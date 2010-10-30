@@ -2,7 +2,8 @@ try:
     import json
 except:
     import simplejson as json
-    
+
+import config
 import validators
 import auth
 import data
@@ -10,114 +11,9 @@ import data
 from bottle import request, response, error, run, route, static_file
 
 api_calls = []
-config = {'debug':2}
-
-def error400(docs=[], missing={}, malformed={}, func_doc=''):
-    response.status = 400
-    response.content_type = 'text/plain'
-
-    if config['debug'] == 2 or 'debug_loud' in request.GET:
-        d = [ json.dumps([]) ]
-        d.append('')
-        d.append('/* debug splitter */')
-        
-        d.append('/* Function Documentation: %s */' % func_doc)
-        
-        for i in missing:
-            d.append('// %r is required for this API call.' % i)
-            d.append('')
-        if malformed:
-            d.append('')
-            d.append('// Malformed:')
-
-            for key, string in docs:
-                d.append('//   %s: %s' % (key, ', '.join(string)))
-
-    elif 'debug' in request.POST:
-        d = [json.dumps( {'missing':missing, 'malformed':malformed, 'docs':docs} )]
-    else:
-        d = [json.dumps( {'missing':missing, 'malformed':malformed} )]        
-    return '\n'.join(d)
-
-def api(path='/', auth=None, required=[], optional={}, validate={}, version='0', method='GET'):
-    def wrapper(wrapped_function):
-        api_calls.append( (method, '%s%s' % (version, path),
-            {
-            'path':path, 
-            'func_name':wrapped_function.func_name,
-            'func_doc':wrapped_function.func_doc,
-            'func':wrapped_function,
-            'required_args':required,
-            'optional_args':optional,
-            'validators':validate,
-            'api_version':version,
-            }) )
-        def inner(*args, **kwargs):            
-            missing = {}
-            malformed = {}
-            docs = []
-            session = None
-            
-            d = {}
-            d.update(optional)
-            d.update(request.POST)
-            d.update(request.GET)
-
-            if auth:
-                try:
-                    if '_auth_token' in d:
-                        session = auth(d['_auth_token'])
-                    elif request.COOKIES.get("_auth_token", None):
-                        session = auth(request.COOKIES.get("_auth_token"))
-                    else:
-                        response.statuscode = 401
-                        return json.dumps( {'error':'Authorization Required'} )
-                except:
-                    response.statuscode = 401
-                    return json.dumps( {'error':'Authorization Required'} )
-                    
-            #validate, required
-            #d.update(required)
-            
-            for i in required:
-                if i not in d:
-                    missing[i] = ( i, i )
-                    
-            for key in validate:
-                value = validate[key]
-
-                try:
-                    d[key] = value(d[key])
-                except Exception, e:
-                    malformed[key] = value.func_name
-                    docs.append( (key, e.args) )
-            
-            if missing or malformed:
-                return error400(docs=docs, missing=missing, malformed=malformed, func_doc=wrapped_function.func_doc)
-
-            if 'session' in d:
-                raise Exception("Session is a reserved keyword, don't use it.")
-
-            if '_auth_token' in d:
-                d.pop('_auth_token')
-                
-            if '__args__' in d:
-                a = d.popitem('__args__')
-            else:
-                a = []
-
-            #return wrapped_function(instance, user=None, **d)
-            if auth == None:
-                return json.dumps(wrapped_function(*a, **d))
-            else:
-                d['session'] = session
-                return json.dumps(wrapped_function(*a, **d))
-            
-        f = route('/%s/%s' % (version, path.lstrip('/')), method=method)(inner)
-        if version == '0':
-            route(path, method=method)(inner)
-        return f
-    return wrapper
+config.api_calls = api_calls
+default_api = config.NydusAPI()
+api = default_api.api
 
 @error(404)
 def error404(error): return 'There is no API call at this URL.'
@@ -201,5 +97,5 @@ def route_to_app(url, loc):
 def nydus_run(host='127.0.0.1', port=8080, reloader=True, config_d={}):
     import bottle
     bottle.debug(True)
-    config.update(config_d)
     run(host=host, port=port, reloader=reloader)
+

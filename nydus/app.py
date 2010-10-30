@@ -12,6 +12,10 @@ import sys
 if '-test' in sys.argv:
     d = {}
     d['count'] = 0
+    
+    @api(path='/error/')
+    def error():
+        raise Exception( 1000, 'you suck' )
 
     @api(path='/count/')
     def list():
