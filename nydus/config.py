@@ -90,8 +90,9 @@ class NydusAPI(object):
                         response.statuscode = 401
                         return json.dumps( {'error':(401, 'Authorization Required')} )
                         
-                    if 'uid' in session.data:
-                        session.user = self.user_class(session.data['uid'])
+                    print session.user_id
+                    if session.user_id:
+                        session.user = self.user_class(session.user_id)
 
                 if session and session.user and auth not in (True, False):
                     # auth == group_name
