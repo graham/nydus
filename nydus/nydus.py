@@ -103,3 +103,9 @@ def this_is_awesome():
     print 'hi'
 
     print 'other'
+
+def something else():
+    print 'my name'
+
+    print 'is graham'
+
