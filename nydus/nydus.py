@@ -109,3 +109,7 @@ def something_else():
 
     print 'is graham'
 
+def add_something():
+    print 'what'
+
+    print 'is your name'
