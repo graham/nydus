@@ -98,3 +98,8 @@ def nydus_run(host='127.0.0.1', port=8080, reloader=True, config_d={}):
     import bottle
     bottle.debug(True)
     run(host=host, port=port, reloader=reloader)
+
+def test1():
+    print 'hi'
+
+    print 'water'
