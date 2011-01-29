@@ -96,7 +96,7 @@ class NydusUserFile(NydusUser):
     def create(self):
         k = '/tmp/users/' + self.uid
         if os.path.exists(k):
-            raise Exception( 100, "User Already Exists" )
+            raise NydusException( 100, "User Already Exists" )
         f = open(k, 'w')
         d = {}
         d.update( {'uid':self.uid, 'password':self.password, 'groups':self.groups, 'data':self.data} )
@@ -256,7 +256,7 @@ def use_easy_auth():
                 response.set_cookie(key='_auth_token', value=id, expires=3600*24, path='/')
             return id
         else:
-            raise Exception( 0, "Authorization Failed.")
+            raise NydusException( 0, "Authorization Failed.")
         
     @api(path='/auth/sset', auth=True, explicit_pass_in=True)
     def session_set(_api_object, session, **kwargs):

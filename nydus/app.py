@@ -15,7 +15,11 @@ if '-test' in sys.argv:
     
     @api(path='/error/')
     def error():
-        raise Exception( 1000, 'you suck' )
+        raise NydusException( 1000, 'you suck' )
+
+    @api(path='/kwarg/')
+    def foo(*args, **kwargs):
+        return 'awesometown'
 
     @api(path='/count/')
     def list():

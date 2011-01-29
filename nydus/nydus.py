@@ -14,7 +14,8 @@ api_calls = []
 config.api_calls = api_calls
 default_api = config.NydusAPI()
 api = default_api.api
-
+page = default_api.page
+    
 @error(404)
 def error404(error): return 'There is no API call at this URL.'
 
@@ -90,8 +91,11 @@ def wrap_object(root, obj, methods, **topkwargs):
             return getattr(obj, __method)(**kwargs)
 
 def route_to_app(url, loc):
+    @route('/%s/' % url)
     @route('/%s/:path#.+#' % url)
-    def server_static(path):
+    def server_static(path='/'):
+        if path.endswith('/'):
+            path += 'index.html'
         return static_file(path, root=loc)
 
 def nydus_run(host='127.0.0.1', port=8080, reloader=True, config_d={}):

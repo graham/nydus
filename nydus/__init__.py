@@ -1,4 +1,5 @@
 from nydus import *
 
 def looks_like():
-    raise Exception("IMPLEMENT ME!")
+    raise NydusException("IMPLEMENT ME!")
+    

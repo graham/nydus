@@ -64,7 +64,7 @@ class NydusClient(object):
         if result[0] == 200:
             return result[1]
         else:
-            raise Exception( 0, str(result) )
+            raise NydusException( 0, str(result) )
     
     def _reflect(self):
         for i in self._calls:
