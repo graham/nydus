@@ -91,12 +91,14 @@ def wrap_object(root, obj, methods, **topkwargs):
             return getattr(obj, __method)(**kwargs)
 
 def route_to_app(url, loc):
-    @route('/%s/' % url)
-    @route('/%s/:path#.+#' % url)
+    @route('%s' % url)
+    @route('%s:path#.+#' % url)
     def server_static(path='/'):
         if path.endswith('/'):
             path += 'index.html'
         return static_file(path, root=loc)
+
+route_to_app('/lib/', 'nydus/html')
 
 def nydus_run(host='127.0.0.1', port=8080, reloader=True, config_d={}):
     import bottle

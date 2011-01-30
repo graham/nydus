@@ -23,7 +23,7 @@ class NydusAPI(object):
 
     def get_file(self, fname):
         if fname in self.f_template_cache:
-            pass
+            self.f_template_cache[fname] = open(fname).read()
         else:
             self.f_template_cache[fname] = open(fname).read()
 
@@ -171,7 +171,9 @@ class NydusAPI(object):
                 return nr.args[0]
         return inner
         
-    def page(self, template, **outkw):
+    def page(self, template, dump=None, **outkw):
+        if dump == None:
+            dump = 'templates/dump.html'
         d = dict(path='/', auth=None, required=[], optional={}, validate={}, version=None, method='GET', errors={}, returns=None, explicit_pass_in=False)
         d.update(outkw)
         if d['version'] == None:
@@ -196,8 +198,12 @@ class NydusAPI(object):
 
             def wrap_template(*args, **kwargs):
                 d = inner(*args, **kwargs)
-                t = self.get_file(template) + (self.get_file('templates/dump.html') % json.dumps(d))
-                return t
+                t = self.get_file(template)
+                try:
+                    tt = (self.get_file(dump) % json.dumps(d))
+                except:
+                    tt = ''
+                return t + tt
 
             f = route('/%s' % (d['path'].lstrip('/')), method=d['method'])(wrap_template)
             return f
